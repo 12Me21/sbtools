@@ -1,0 +1,181 @@
+<meta charset="utf-8">
+
+<!--Upload SB file: <input id="$uploadFile" type="file">-->
+
+<table>
+	<tr>
+		<td>File Type</td>
+		<td><select id="$fileType"><option value="0">TXT</option><option value="1">DAT</option></select></td>
+	</tr>
+	<tr>
+		<td>File Icon</td>
+		<td><select id="$icon"><option value="0">TXT/DAT</option><option value="1">PRG/GRP</option></select></td>
+	</tr>
+	<tr>
+		<td>Modified Date</td>
+		<td><input id="$date" type="date"><input id="$time" type="time"><input id="$seconds" type="number" min="0" max="59"></td>
+	</tr>
+	<tr>
+		<td>Author</td>
+		<td><input id="$author" maxlength="17"></td>
+	</tr>
+	
+	<tr>
+		<td>DAT Type</td>
+		<td><select id="$dataType">
+			<option value="3">color (uint16)</option>
+			<option value="4">int (int32)</option>
+			<option value="5">float (double)</option>
+		</select></td>
+	</tr>
+	
+	<tr>
+		<td>Number of Dimensions:</td>
+		<td><input id="$dimensions" type="number" min="1" max="4"></td>
+	</tr>
+	
+	<tr>
+		<td>Dimension Lengths:</td>
+		<td>
+			<input id="$dimension1" type="number" min="0">
+			<input id="$dimension2" type="number" min="0">
+			<input id="$dimension3" type="number" min="0">
+			<input id="$dimension4" type="number" min="0">
+		</td>
+	</tr>
+	
+	<!--<tr>
+		<td>Compression:</td>
+		<td><input id="$compression" type="checkbox"></td>
+	</tr>-->
+	<tr>
+		<td>Upload Data/Text:</td>
+		<td><input oninput="fileUpload(this)" id="$uploadData" type="file"></td>
+	</tr>
+	
+	<tr>
+		<td>Convert Image:</td>
+		<td><input oninput="imageUpload(this)" id="$uploadImage" type="file" accept="image/*"></td>
+	</tr>
+</table>
+<input id="$name" maxlength="14" value="UNTITLED">
+<button onclick="finish()">Generate File</button>
+<canvas hidden id="$canvas"></canvas>
+<a id="$download" hidden></a>
+
+<script src="sha1hmac.js"></script>
+<script src="sbfile.js"></script>
+<!--<script src="pako.min.js">zlib library: https://github.com/nodeca/pako</script>-->
+
+<script>
+	var fileData = new Uint8Array(0);
+	
+	function fileUpload(x){
+		var reader=new FileReader();
+		reader.onload=function(z){
+			fileData=new Uint8Array(reader.result);
+		}
+		reader.readAsArrayBuffer(x.files[0]);
+	}
+
+	function imageUpload(x){
+		var reader=new FileReader();
+		reader.onload=function(z){
+			var i=new Image;
+			i.onload=function(){
+				imageToGrp(i);
+			}
+			i.src=reader.result;
+		}
+		reader.readAsDataURL(x.files[0]);
+	}
+	
+	function col16(a,r,g,b){
+		return (a==255?1:0) | b>>3<<1 | g>>3<<5+1 | r>>3<<5+5+1;
+	}
+	
+	function finish(){
+		var header=readSettings();
+		if(header.fileType==1)
+			var prefix="B";
+		else
+			prefix="T";
+		var file = writeFile(readSettings(),fileData);
+		doSave(file,prefix+$name.value);
+	}
+	
+	function doSave(data,name){
+		var blob = new Blob([data],{"type":"octet/stream"});
+		$download.download=name;
+		$download.href=URL.createObjectURL(blob);
+		$download.click();
+	}
+	
+	function imageToGrp(image){
+		$canvas.width=image.width;
+		$canvas.height=image.height;
+		var c2d=$canvas.getContext("2d");
+		c2d.drawImage(image,0,0,image.width,image.height);
+		fileData = new Uint8Array(image.width*image.height*2);
+		var view = new DataView(fileData.buffer);
+		console.log(0,0,image.width,image.height);
+		data = c2d.getImageData(0,0,image.width,image.height).data;
+		for(var i=0;i<data.length/4;i++){
+			view.setUint16(i*2,col16(data[i*4+3],data[i*4],data[i*4+1],data[i*4+2]),true);
+		}
+		$fileType.value=1;
+		$dataType.value=3;
+		$dimensions.value=2;
+		$dimension1.value=image.width;
+		$dimension2.value=image.height;
+		
+		
+		$canvas.width=$canvas.height=0;
+	}
+	
+	function readSettings(){
+		var header = {};
+		header.fileType = Number($fileType.value);
+		var isDat = header.fileType==1;
+		header.icon = Number($icon.value);
+		var date = $date.value.match(/(\d{4})-(\d{2})-(\d{2})/) || [undefined,14522,398,4];
+		header.year =  Number(date[1]);
+		header.month = Number(date[2]);
+		header.day =   Number(date[3]);
+		var time = $time.value.match(/(\d{2}):(\d{2})/) || [undefined,69,420];
+		header.hour =  Number(time[1]);
+		header.minute =Number(time[2]);
+		header.second = Number($seconds.value);
+		header.author1 = header.author2 = $author.value;
+		header.blacklist1 = header.blacklist2 = 0;
+		header.compression = $compression.checked ? 4 : 0;
+		if(isDat){
+			header.dataType = Number($dataType.value);
+			header.dimensions = Number($dimensions.value);
+			header.dimension1 = Number($dimension1.value);
+			header.dimension2 = Number($dimension2.value);
+			header.dimension3 = Number($dimension3.value);
+			header.dimension4 = Number($dimension4.value);
+		}
+		return header;
+	}
+	
+	function writeSettings(header){
+		var isDat = header.fileType==1;
+		$fileType.value = header.fileType;
+		$icon.value = header.icon;
+		$date.value = pad(header.year,4)+"-"+pad(header.month,2)+pad(header.day,2);
+		$time.value = pad(header.hour,2)+":"+pad(header.minute,2);
+		$seconds.value = header.seconds;
+		$author.value = header.author1;
+		$compression.checked = header.compression==4;
+		if(isDat){
+			$dataType.value = header.dataType;
+			$dimensions.value = header.dimensions;
+			$dimension1.value = header.dimension1;
+			$dimension2.value = header.dimension2;
+			$dimension3.value = header.dimension3;
+			$dimension4.value = header.dimension4;
+		}
+	}
+</script>
