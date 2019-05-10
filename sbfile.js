@@ -7,7 +7,7 @@ var HEADER = [
 	{pos:0x02, type:"Int16",  name:"fileType"}, //0=TXT, 1=DAT
 	{pos:0x06, type:"Int16",  name:"icon"},     //0=TXT/DAT, 1=PRG/GRP
 	{pos:0x08, type:"Int32",  name:"fileSize"}, //size of data, not including header/footer (display only)
-	{pos:0x0C, type:"Int32",  name:"year"},     
+	{pos:0x0C, type:"Int16",  name:"year"},     
 	{pos:0x0E, type:"Int8",   name:"month"},    
 	{pos:0x0F, type:"Int8",   name:"day"},
 	{pos:0x10, type:"Int8",   name:"hour"},
