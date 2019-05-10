@@ -148,7 +148,7 @@
 		header.second = Number($seconds.value);
 		header.author1 = header.author2 = $author.value;
 		header.blacklist1 = header.blacklist2 = 0;
-		header.compression = $compression.checked ? 4 : 0;
+		//header.compression = $compression.checked ? 4 : 0;
 		if(isDat){
 			header.dataType = Number($dataType.value);
 			header.dimensions = Number($dimensions.value);
@@ -168,7 +168,7 @@
 		$time.value = pad(header.hour,2)+":"+pad(header.minute,2);
 		$seconds.value = header.seconds;
 		$author.value = header.author1;
-		$compression.checked = header.compression==4;
+		//$compression.checked = header.compression==4;
 		if(isDat){
 			$dataType.value = header.dataType;
 			$dimensions.value = header.dimensions;
