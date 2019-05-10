@@ -3,7 +3,7 @@
 ////////////////////////
 
 var HEADER = [
-	{pos:0x00, type:"Uint8",  value:0x1000},
+	{pos:0x00, type:"Uint16",  value:0x1000},
 	{pos:0x02, type:"Int16",  name:"fileType"}, //0=TXT, 1=DAT
 	{pos:0x06, type:"Int16",  name:"icon"},     //0=TXT/DAT, 1=PRG/GRP
 	{pos:0x08, type:"Int32",  name:"fileSize"}, //size of data, not including header/footer (display only)
@@ -23,7 +23,7 @@ var HEADER = [
 
 var DAT_HEADER = [
 	{pos:0x50, type:"Uint32", value:0x4E424350}, //PCBN
-	{pos:0x54, type:"Uint32", value:0x49484848}, //0001
+	{pos:0x54, type:"Uint32", value:0x31303030}, //0001
 	{pos:0x58, type:"Int16", name:"dataType"}, //3 = uint16 (colors), 4 = int32, 5 = double
 	{pos:0x5A, type:"Int16", name:"dimensions"},
 	{pos:0x5C, type:"Int32", name:"dimension1"},
