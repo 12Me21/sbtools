@@ -66,14 +66,14 @@ function writeFile(header, data){
 		dataLength=data.length;
 	}
 	
-	var file = new Uint8Array(80+dataLength+32);
+	var file = new Uint8Array(80+dataLength+20);
 	header.fileSize=dataLength;
 	
 	file.set(data,80);
 	
 	templateSet(file,HEADER,header,0);
 	
-	//setFooter(file);
+	setFooter(file);
 	return file;
 }
 
