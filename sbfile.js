@@ -3,7 +3,7 @@
 ////////////////////////
 
 var HEADER = [
-	{pos:0x00, type:"Uint16", value:0x0000},
+	{pos:0x00, type:"Uint16", value:0x0001},
 	{pos:0x02, type:"Int16",  name:"fileType"}, //0=TXT, 1=DAT
 	{pos:0x04, type:"Int16",  name:"compression"}, //4 = zlib compressed? (DAT only)
 	{pos:0x06, type:"Int16",  name:"icon"},     //0=TXT/DAT, 1=PRG/GRP
@@ -14,7 +14,7 @@ var HEADER = [
 	{pos:0x10, type:"Int8",   name:"hour"},
 	{pos:0x11, type:"Int8",   name:"minute"},
 	{pos:0x12, type:"Int8",   name:"second"},
-	{pos:0x13, type:"Uint8", value:0x3},
+	//{pos:0x13, type:"Uint8", value:0x3},
 	//1 byte ?
 	{pos:0x14, type:"StringUtf8", arg:18, name:"author1"}, //hidden
 	{pos:0x26, type:"StringUtf8", arg:18, name:"author2"}, //displayed, but replaced with author1 when uploaded
@@ -168,3 +168,6 @@ function fromUtf8(s) {
 function toUtf8(s) {
 	return unescape(encodeURIComponent(s));
 }
+
+//credits:
+//record, Y, snail, trinitro, 12Me21
