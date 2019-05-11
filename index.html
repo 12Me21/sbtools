@@ -1,23 +1,39 @@
 <meta charset="utf-8">
 
-<!--Upload SB file: <input id="$uploadFile" type="file">-->
-
 <table>
 	<tr>
-		<td>File Type</td>
-		<td><select id="$fileType"><option value="0">TXT</option><option value="1">DAT</option></select></td>
+		<td><label for="$fileType">File Type</label></td>
+		<td><select id="$fileType" onchange="updateIcon()">
+			<option value="0">TXT</option>
+			<option value="1">DAT</option>
+		</select>
+		</td>
 	</tr>
 	<tr>
-		<td>File Icon</td>
-		<td><select id="$icon"><option value="0">TXT/DAT</option><option value="1">PRG/GRP</option></select></td>
+		<td><label for="$icon">File Icon</label></td>
+		<td>
+			<select id="$icon" onchange="updateIcon()">
+				<option value="0">TXT/DAT</option>
+				<option value="1">PRG/GRP</option>
+			</select>
+			<img id="$iconPreview" style="vertical-align:bottom;">
+		</td>
 	</tr>
 	<tr>
 		<td>Modified Date</td>
-		<td><input id="$date" type="date"><input id="$time" type="time"><input id="$seconds" type="number" min="0" max="59"></td>
+		<td>
+			<button onclick="setCurrentTime()">Current Time</button>
+			<input id="$date" type="date">
+			<input id="$time" type="time">
+			<input id="$seconds" type="number" min="0" max="59" placeholder="seconds">
+		</td>
 	</tr>
 	<tr>
 		<td>Author</td>
-		<td><input id="$author" maxlength="17"></td>
+		<td>
+			<input id="$author" maxlength="17">
+			<input id="$uid" type="number">
+		</td>
 	</tr>
 	
 	<tr>
@@ -57,6 +73,11 @@
 		<td>Convert Image:</td>
 		<td><input oninput="imageUpload(this)" id="$uploadImage" type="file" accept="image/*"></td>
 	</tr>
+	
+	<tr>
+		<td>Upload SB file:</td>
+		<td><input oninput="sbFileUpload(this)" id="$uploadSBFile" type="file"></td>
+	</tr>
 </table>
 <input id="$name" maxlength="14" value="UNTITLED">
 <button onclick="finish()">Generate File</button>
@@ -69,6 +90,32 @@
 
 <script>
 	var fileData = new Uint8Array(0);
+	
+	window.onload=function(){
+		updateIcon();
+	}
+	
+	function updateIcon(){
+		$iconPreview.src = "icon"+$fileType.value+$icon.value+".png";
+	}
+	
+	function setCurrentTime(){
+		var now=new Date();
+		writeDateTime(now.getFullYear(),now.getMonth()+1,now.getDate(),now.getHours(),now.getMinutes());
+		$seconds.value=now.getSeconds();
+	}
+	
+	function sbFileUpload(x){
+		var reader=new FileReader();
+		reader.onload=function(z){
+			var header = {};
+			fileData=readFile(new Uint8Array(reader.result),header);
+			writeSettings(header);
+			$name.value = x.files[0].name.substr(1);
+		}
+		console.log(x);
+		reader.readAsArrayBuffer(x.files[0]);
+	}
 	
 	function fileUpload(x){
 		var reader=new FileReader();
@@ -127,6 +174,8 @@
 			view.setUint16(i*2,col16(data[i*4+3],data[i*4],data[i*4+1],data[i*4+2]),true);
 		}
 		$fileType.value=1;
+		$icon.value=1;
+		updateIcon();
 		$dataType.value=3;
 		$dimensions.value=2;
 		$dimension1.value=image.width;
@@ -136,21 +185,35 @@
 		$canvas.width=$canvas.height=0;
 	}
 	
+	function readDateTime(){
+		var date = $date.value.match(/(\d{4})-(\d{2})-(\d{2})/) || [undefined,2000,1,1];
+		var time = $time.value.match(/(\d{2}):(\d{2})/) || [undefined,0,0];
+		return [+date[1], +date[2], +date[3], +time[1], +time[2]];
+	}
+	
+	function clamp(value,min,max){
+		return Math.min(Math.max(value,min),max);
+	}
+	
+	function writeDateTime(year,month,day,hour,minute){
+		$date.value = pad(clamp(year,0,9999),4)+"-"+pad(clamp(month,0,99),2)+"-"+pad(clamp(day,0,99),2);
+		$time.value = pad(clamp(hour,0,99),2)+":"+pad(clamp(minute,0,99),2);
+	}
+	
 	function readSettings(){
 		var header = {};
 		header.fileType = Number($fileType.value);
 		var isDat = header.fileType==1;
 		header.icon = Number($icon.value);
-		var date = $date.value.match(/(\d{4})-(\d{2})-(\d{2})/) || [undefined,14522,398,4];
-		header.year =  Number(date[1]);
-		header.month = Number(date[2]);
-		header.day =   Number(date[3]);
-		var time = $time.value.match(/(\d{2}):(\d{2})/) || [undefined,69,420];
-		header.hour =  Number(time[1]);
-		header.minute =Number(time[2]);
+		var date = readDateTime();
+		header.year   = date[0];
+		header.month  = date[1];
+		header.day    = date[2];
+		header.hour   = date[3];
+		header.minute = date[4];
 		header.second = Number($seconds.value);
 		header.author1 = header.author2 = $author.value;
-		header.blacklist1 = header.blacklist2 = 0;
+		header.uid1 = header.uid2 = +$uid.value;
 		header.compression = $compression.checked ? 1 : 0;
 		if(isDat){
 			header.dataType = Number($dataType.value);
@@ -163,14 +226,19 @@
 		return header;
 	}
 	
+	function pad(number,length){
+		return number.toString().padStart(length,"0");
+	}
+	
 	function writeSettings(header){
+		console.log(header);
 		var isDat = header.fileType==1;
 		$fileType.value = header.fileType;
 		$icon.value = header.icon;
-		$date.value = pad(header.year,4)+"-"+pad(header.month,2)+pad(header.day,2);
-		$time.value = pad(header.hour,2)+":"+pad(header.minute,2);
-		$seconds.value = header.seconds;
+		writeDateTime(header.year, header.month, header.day, header.hour, header.minute);
+		$seconds.value = header.second;
 		$author.value = header.author1;
+		$uid.value = header.uid1;
 		$compression.checked = header.compression;
 		if(isDat){
 			$dataType.value = header.dataType;
@@ -180,5 +248,6 @@
 			$dimension3.value = header.dimension3;
 			$dimension4.value = header.dimension4;
 		}
+		updateIcon();
 	}
 </script>
