@@ -48,11 +48,11 @@ function writeFile(header, data){
 	if(isDat){
 		var type=header.dataType;
 		if(type==3) //col
-			dataLength&=~1;
+			dataLength=Math.ceil(dataLength/2)*2;
 		else if(type==4) //int
-			dataLength&=~3;
+			dataLength=Math.ceil(dataLength/4)*4;
 		else if(type==5) //float
-			dataLength&=~7;
+			dataLength=Math.ceil(dataLength/8)*8;
 		
 		var newData=new Uint8Array(dataLength+28);
 		templateSet(newData,DAT_HEADER,header,0);

@@ -74,6 +74,9 @@
 		var reader=new FileReader();
 		reader.onload=function(z){
 			fileData=new Uint8Array(reader.result);
+			$dataType.value=4
+			$dimensions.value=1;
+			$dimension1.value=Math.ceil(fileData.length/4);
 		}
 		reader.readAsArrayBuffer(x.files[0]);
 	}
