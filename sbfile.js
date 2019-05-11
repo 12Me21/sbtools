@@ -3,17 +3,19 @@
 ////////////////////////
 
 var HEADER = [
-	{pos:0x00, type:"Uint16",  value:0x1000},
+	{pos:0x00, type:"Uint16", value:0x0000},
 	{pos:0x02, type:"Int16",  name:"fileType"}, //0=TXT, 1=DAT
+	{pos:0x04, type:"Int16",  name:"compression"}, //4 = zlib compressed? (DAT only)
 	{pos:0x06, type:"Int16",  name:"icon"},     //0=TXT/DAT, 1=PRG/GRP
 	{pos:0x08, type:"Int32",  name:"fileSize"}, //size of data, not including header/footer (display only)
-	{pos:0x0C, type:"Int16",  name:"year"},     
+	{pos:0x0C, type:"Int32",  name:"year"},     
 	{pos:0x0E, type:"Int8",   name:"month"},    
 	{pos:0x0F, type:"Int8",   name:"day"},
 	{pos:0x10, type:"Int8",   name:"hour"},
 	{pos:0x11, type:"Int8",   name:"minute"},
 	{pos:0x12, type:"Int8",   name:"second"},
-	{pos:0x13, type:"Int8",   name:"compressed"}, //4 = zlib compressed? (DAT only)
+	{pos:0x13, type:"Uint8", value:0x3},
+	//1 byte ?
 	{pos:0x14, type:"StringUtf8", arg:18, name:"author1"}, //hidden
 	{pos:0x26, type:"StringUtf8", arg:18, name:"author2"}, //displayed, but replaced with author1 when uploaded
 	{pos:0x38, type:"Int32",  name:"blacklist1"}, //whatever
@@ -22,14 +24,14 @@ var HEADER = [
 ]
 
 var DAT_HEADER = [
-	{pos:0x50, type:"Uint32", value:0x4E424350}, //PCBN
-	{pos:0x54, type:"Uint32", value:0x31303030}, //0001
-	{pos:0x58, type:"Int16", name:"dataType"}, //3 = uint16 (colors), 4 = int32, 5 = double
-	{pos:0x5A, type:"Int16", name:"dimensions"},
-	{pos:0x5C, type:"Int32", name:"dimension1"},
-	{pos:0x60, type:"Int32", name:"dimension2"},
-	{pos:0x64, type:"Int32", name:"dimension3"},
-	{pos:0x68, type:"Int32", name:"dimension4"},
+	{pos:0x00, type:"Uint32", value:0x4E424350}, //PCBN
+	{pos:0x04, type:"Uint32", value:0x31303030}, //0001
+	{pos:0x08, type:"Int16", name:"dataType"}, //3 = uint16 (colors), 4 = int32, 5 = double
+	{pos:0x0A, type:"Int16", name:"dimensions"},
+	{pos:0x0C, type:"Int32", name:"dimension1"},
+	{pos:0x10, type:"Int32", name:"dimension2"},
+	{pos:0x14, type:"Int32", name:"dimension3"},
+	{pos:0x18, type:"Int32", name:"dimension4"},
 ]
 
 //////////
@@ -40,8 +42,8 @@ var DAT_HEADER = [
 //Uint8Array data
 function writeFile(header, data){
 	var isDat = header.fileType==1;
-	var headerSize = isDat ? 108 : 80;
 	var dataLength = data.length;
+	
 	//pad data length
 	if(isDat){
 		var type=header.dataType;
@@ -51,28 +53,46 @@ function writeFile(header, data){
 			dataLength&=~3;
 		else if(type==5) //float
 			dataLength&=~7;
+		
+		var newData=new Uint8Array(dataLength+28);
+		templateSet(newData,DAT_HEADER,header,0);
+		newData.set(data,28);
+		data=newData;
+		dataLength+=28;
 	}
+	
+	if(header.compression){
+		data=pako.deflate(data);
+		dataLength=data.length;
+	}
+	
+	var file = new Uint8Array(80+dataLength+32);
 	header.fileSize=dataLength;
 	
-	var file = new Uint8Array(headerSize+dataLength+20);
-	templateSet(file,HEADER,header);
-	if(isDat)
-		templateSet(file,DAT_HEADER,header);
-	file.set(data,headerSize);
-	setFooter(file);
+	file.set(data,80);
+	
+	templateSet(file,HEADER,header,0);
+	
+	//setFooter(file);
 	return file;
 }
 
 //file: Uint8Array
 //header: Object(OUT)
 //Uint8Array
+
+//doesn't work right now)
 function readFile(file, header){
 	templateGet(file,HEADER,header);
 	var isDat = header.fileType==1;
 	var headerSize = isDat ? 108 : 80;
 	if(isDat)
 		templateGet(file,DAT_HEADER,header);
-	return file.slice(headerSize, file.length-20);
+	var data=file.slice(headerSize, file.length-20);
+	//if(header.compressed==4){
+	//	data=pako.inflateRaw(data);
+	//}
+	return data;
 }
 
 ////////////////
@@ -92,20 +112,20 @@ function setFooter(file){
 ///////////////////
 
 //Uint8Array file
-function templateSet(file, template, header){
+function templateSet(file, template, header, offset){
 	var view = new DataView(file.buffer);
 	template.forEach(function(item){
 		var value = item.name ? header[item.name] : item.value;
 		var arg = item.arg===undefined ? true : item.arg;
-		view["set"+item.type](item.pos,value,arg);
+		view["set"+item.type](item.pos+ +offset,value,arg);
 	});
 }
 
-function templateGet(file, template, header){
+function templateGet(file, template, header, offset){
 	var view = new DataView(file.buffer);
 	template.forEach(function(item){
 		var arg = item.arg===undefined ? true : item.arg;
-		var value = view["get"+item.type](item.pos,arg);
+		var value = view["get"+item.type](item.pos+ +offset,arg);
 		if(item.name){
 			header[item.name] = value;
 		}else if(value != item.value){

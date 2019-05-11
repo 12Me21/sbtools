@@ -44,10 +44,10 @@
 		</td>
 	</tr>
 	
-	<!--<tr>
+	<tr>
 		<td>Compression:</td>
 		<td><input id="$compression" type="checkbox"></td>
-	</tr>-->
+	</tr>
 	<tr>
 		<td>Upload Data/Text:</td>
 		<td><input oninput="fileUpload(this)" id="$uploadData" type="file"></td>
@@ -65,7 +65,7 @@
 
 <script src="sha1hmac.js"></script>
 <script src="sbfile.js"></script>
-<!--<script src="pako.min.js">zlib library: https://github.com/nodeca/pako</script>-->
+<script src="pako.min.js">zlib library: https://github.com/nodeca/pako</script>
 
 <script>
 	var fileData = new Uint8Array(0);
@@ -148,7 +148,7 @@
 		header.second = Number($seconds.value);
 		header.author1 = header.author2 = $author.value;
 		header.blacklist1 = header.blacklist2 = 0;
-		//header.compression = $compression.checked ? 4 : 0;
+		header.compression = $compression.checked ? 1 : 0;
 		if(isDat){
 			header.dataType = Number($dataType.value);
 			header.dimensions = Number($dimensions.value);
@@ -168,7 +168,7 @@
 		$time.value = pad(header.hour,2)+":"+pad(header.minute,2);
 		$seconds.value = header.seconds;
 		$author.value = header.author1;
-		//$compression.checked = header.compression==4;
+		$compression.checked = header.compression;
 		if(isDat){
 			$dataType.value = header.dataType;
 			$dimensions.value = header.dimensions;
