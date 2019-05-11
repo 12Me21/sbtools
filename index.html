@@ -14,7 +14,8 @@
 		<td>
 			<select id="$icon" onchange="updateIcon()">
 				<option value="0">TXT/DAT</option>
-				<option value="1">PRG/GRP</option>
+				<option value="1">PRG</option>
+				<option value="2">GRP</option>
 			</select>
 			<img id="$iconPreview" style="vertical-align:bottom;">
 		</td>
@@ -96,7 +97,7 @@
 	}
 	
 	function updateIcon(){
-		$iconPreview.src = "icon"+$fileType.value+$icon.value+".png";
+		$iconPreview.src = [+$fileType.value?"dat":"txt","prg","grp"][$icon.value]+"_icon.png";
 	}
 	
 	function setCurrentTime(){
