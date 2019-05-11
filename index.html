@@ -1,70 +1,8 @@
 <meta charset="utf-8">
 
+<fieldset>
+<legend>Upload file</legend>
 <table>
-	<tr>
-		<td><label for="$fileType">File Type</label></td>
-		<td><select id="$fileType" onchange="updateIcon()">
-			<option value="0">TXT</option>
-			<option value="1">DAT</option>
-		</select>
-		</td>
-	</tr>
-	<tr>
-		<td><label for="$icon">File Icon</label></td>
-		<td>
-			<select id="$icon" onchange="updateIcon()">
-				<option value="0">TXT/DAT</option>
-				<option value="1">PRG</option>
-				<option value="2">GRP</option>
-			</select>
-			<img id="$iconPreview" style="vertical-align:bottom;">
-		</td>
-	</tr>
-	<tr>
-		<td>Modified Date</td>
-		<td>
-			<button onclick="setCurrentTime()">Current Time</button>
-			<input id="$date" type="date">
-			<input id="$time" type="time">
-			<input id="$seconds" type="number" min="0" max="59" placeholder="seconds">
-		</td>
-	</tr>
-	<tr>
-		<td>Author</td>
-		<td>
-			<input id="$author" maxlength="17">
-			<input id="$uid" type="number">
-		</td>
-	</tr>
-	
-	<tr>
-		<td>DAT Type</td>
-		<td><select id="$dataType">
-			<option value="3">color (uint16)</option>
-			<option value="4">int (int32)</option>
-			<option value="5">float (double)</option>
-		</select></td>
-	</tr>
-	
-	<tr>
-		<td>Number of Dimensions:</td>
-		<td><input id="$dimensions" type="number" min="1" max="4"></td>
-	</tr>
-	
-	<tr>
-		<td>Dimension Lengths:</td>
-		<td>
-			<input id="$dimension1" type="number" min="0">
-			<input id="$dimension2" type="number" min="0">
-			<input id="$dimension3" type="number" min="0">
-			<input id="$dimension4" type="number" min="0">
-		</td>
-	</tr>
-	
-	<tr>
-		<td>Compression:</td>
-		<td><input id="$compression" type="checkbox"></td>
-	</tr>
 	<tr>
 		<td>Upload Data/Text:</td>
 		<td><input oninput="fileUpload(this)" id="$uploadData" type="file"></td>
@@ -80,14 +18,115 @@
 		<td><input oninput="sbFileUpload(this)" id="$uploadSBFile" type="file"></td>
 	</tr>
 </table>
-<input id="$name" maxlength="14" value="UNTITLED">
+</fieldset>
+<fieldset>
+<legend>Settings</legend>
+<table>
+	<tr>
+		<td><label for="$fileType">File Type:</label></td>
+		<td><select id="$fileType" onchange="updateIcon()">
+			<option value="0">TXT</option>
+			<option value="1">DAT</option>
+		</select>
+		</td>
+	</tr>
+	
+	<tr>
+		<td>Compression:</td>
+		<td><input id="$compression" type="checkbox" checked="checked"></td>
+	</tr>
+	
+	<tr>
+		<td>DAT Type:</td>
+		<td><select id="$dataType">
+			<option value="3">color (uint16)</option>
+			<option value="4">int (int32)</option>
+			<option value="5">float (double)</option>
+		</select></td>
+	</tr>
+	
+	<tr>
+		<td>Number of Dimensions:</td>
+		<td><select id="$dimensions">
+			<option value="1">1</option>
+			<option value="2">two</option>
+			<option value="4">IV</option>
+			<option value="3">3</option>
+		</select></td>
+	</tr>
+	
+	<tr>
+		<td>Dimension Lengths:</td>
+		<td>
+			<input id="$dimension1" type="number" min="0" class="small">
+			<input id="$dimension2" type="number" min="0" class="small">
+			<input id="$dimension3" type="number" min="0" class="small">
+			<input id="$dimension4" type="number" min="0" class="small">
+		</td>
+	</tr>
+	
+</table>
+</fieldset>
+<fieldset>
+<legend>Visual settings:</legend>
+<table>
+	<tr>
+		<td><label for="$icon">File Icon</label></td>
+		<td>
+			<select id="$icon" onchange="updateIcon()">
+				<option value="0">TXT/DAT</option>
+				<option value="1">PRG</option>
+				<option value="2">GRP</option>
+			</select>
+			<img id="$iconPreview" style="vertical-align:bottom;">
+		</td>
+	</tr>
+	<tr>
+		<td>Modified Date:</td>
+		<td>
+			<button onclick="setCurrentTime()">Current Time</button>
+			<input id="$date" type="date">
+			<input id="$time" type="time">
+			<input id="$seconds" type="number" min="0" max="59" placeholder="seconds">
+		</td>
+	</tr>
+	<tr>
+		<td>Author:</td>
+		<td>
+			<input id="$author" maxlength="17">
+			<input id="$uid" type="number">
+		</td>
+	</tr>
+</table>
+</fieldset>
+<fieldset>
+<legend>Download</legend>
+<table>
+	<tr>
+		<td>File Name:</td>
+		<td><input id="$name" maxlength="14" value="UNTITLED"></td>
+	</tr>
+</table>
 <button onclick="finish()">Generate File</button>
+</fieldset>
+
 <canvas hidden id="$canvas"></canvas>
 <a id="$download" hidden></a>
 
 <script src="sha1hmac.js"></script>
 <script src="sbfile.js"></script>
 <script src="pako.min.js">zlib library: https://github.com/nodeca/pako</script>
+
+<style>
+	td:first-of-type {
+		text-align:right;
+	}
+	
+	input.small {
+		width: 6em;
+	}
+	
+</style>
 
 <script>
 	var fileData = new Uint8Array(0);
