@@ -39,9 +39,12 @@
 	<tr>
 		<td>DAT Type:</td>
 		<td><select id="$dataType">
+			<option value="0">(int8)</option>
+			<option value="1">(uint8)</option>
+			<option value="2">(int16)</option>
 			<option value="3">color (uint16)</option>
 			<option value="4">int (int32)</option>
-			<option value="5">float (double)</option>
+			<option value="5">float (float64)</option>
 		</select></td>
 	</tr>
 	
@@ -88,6 +91,15 @@
 			<input id="$date" type="date">
 			<input id="$time" type="time">
 			<input id="$seconds" type="number" min="0" max="59" placeholder="seconds">
+			<select id="$weekday">
+				<option value="0">Sunday</option>
+				<option value="1">Monday</option>
+				<option value="2">Tuesday</option>
+				<option value="3">Wednesday</option>
+				<option value="4">Thursday</option>
+				<option value="5">Friday</option>
+				<option value="6">Saturday</option>
+			</select>
 		</td>
 	</tr>
 	<tr>
@@ -143,6 +155,7 @@
 		var now=new Date();
 		writeDateTime(now.getFullYear(),now.getMonth()+1,now.getDate(),now.getHours(),now.getMinutes());
 		$seconds.value=now.getSeconds();
+		$weekday.value=now.getDay()
 	}
 	
 	function sbFileUpload(x){
@@ -157,13 +170,17 @@
 		reader.readAsArrayBuffer(x.files[0]);
 	}
 	
+	$dataType.onchange = function() {
+		var type = +$dataType.value
+		$dimensions.value=1;
+		$dimension1.value=Math.ceil(fileData.length/[1,1,2,2,4,8][type]);
+	}
+	
 	function fileUpload(x){
 		var reader=new FileReader();
 		reader.onload=function(z){
 			fileData=new Uint8Array(reader.result);
-			$dataType.value=4
-			$dimensions.value=1;
-			$dimension1.value=Math.ceil(fileData.length/4);
+			$dataType.onchange()
 		}
 		reader.readAsArrayBuffer(x.files[0]);
 	}
@@ -252,6 +269,7 @@
 		header.hour   = date[3];
 		header.minute = date[4];
 		header.second = Number($seconds.value);
+		header.weekday = Number($weekday.value);
 		header.author1 = header.author2 = $author.value;
 		header.uid1 = header.uid2 = +$uid.value;
 		header.compression = $compression.checked ? 1 : 0;
@@ -277,6 +295,7 @@
 		$icon.value = header.icon;
 		writeDateTime(header.year, header.month, header.day, header.hour, header.minute);
 		$seconds.value = header.second;
+		$weekday.value = header.weekday;
 		$author.value = header.author1;
 		$uid.value = header.uid1;
 		$compression.checked = header.compression;

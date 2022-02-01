@@ -14,6 +14,7 @@ var HEADER = [
 	{pos:0x10, type:"Int8",  name:"hour"       }, // 
 	{pos:0x11, type:"Int8",  name:"minute"     }, // 
 	{pos:0x12, type:"Int8",  name:"second"     }, // 
+	{pos:0x12, type:"Int8",  name:"weekday"    }, // 
 	//{pos:0x13, type:"Int8", value:0x3}, Unknown
 	{pos:0x14, type:"String8", arg:18, name:"author1"}, //hidden
 	{pos:0x26, type:"String8", arg:18, name:"author2"}, //displayed, but replaced with author1 when uploaded
@@ -25,7 +26,7 @@ var HEADER = [
 var DAT_HEADER = [
 	{pos:0x00, type:"Uint32", value:0x4E424350}, //PCBN
 	{pos:0x04, type:"Uint32", value:0x31303030}, //0001
-	{pos:0x08, type:"Int16", name:"dataType"}, //3 = uint16 (colors), 4 = int32, 5 = double
+	{pos:0x08, type:"Int16", name:"dataType"}, //0 = int8, 1 = uint8, 2 = int16, 3 = uint16 (colors), 4 = int32, 5 = double
 	{pos:0x0A, type:"Int16", name:"dimensions"},
 	{pos:0x0C, type:"Int32", name:"dimension1"},
 	{pos:0x10, type:"Int32", name:"dimension2"},
@@ -49,12 +50,7 @@ function writeFile(header, data){
 	//pad data length
 	if(isDat){
 		var type=header.dataType;
-		if(type==3) //col
-			dataLength = Math.ceil(dataLength/2)*2;
-		else if(type==4) //int
-			dataLength = Math.ceil(dataLength/4)*4;
-		else if(type==5) //float
-			dataLength = Math.ceil(dataLength/8)*8;
+		var unit = [1,1,2,2,4,8][type];
 		
 		dataLength += DAT_HEADER_SIZE;
 		var newData = new Uint8Array(dataLength);
